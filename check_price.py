@@ -29,4 +29,4 @@ def get_ratios():
         page.wait_for_timeout(2000)
         page.goto(URL, wait_until="networkidle", timeout=60000)
         page.wait_for_timeout(6000)
-        content = page.content(
+        content = page.content()
