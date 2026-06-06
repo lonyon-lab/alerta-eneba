@@ -19,7 +19,7 @@ UMBRALES = {
     "CLP": {"umbral": 42,   "umbral_bajo": 33},
     "COP": {"umbral": 4200, "umbral_bajo": 3300},
     "ZAR": {"umbral": 20.5, "umbral_bajo": 16},
-    "SAR": {"umbral": 4.45,  "umbral_bajo": 3.2},
+    "SAR": {"umbral": 4.45, "umbral_bajo": 3.2},
     "TWD": {"umbral": 38,   "umbral_bajo": 30},
     "HKD": {"umbral": 9.2,  "umbral_bajo": 7.2},
 }
@@ -28,8 +28,7 @@ UMBRALES = {
 # Para añadir una moneda nueva:
 # 1. Añade su umbral en UMBRALES arriba
 # 2. Añade su bloque aquí con slugs y valores
-# NOTA: cada slug tiene un campo opcional "sin_stock": True para tarjetas que
-# existen pero están habitualmente agotadas — se muestran en el resumen como ⚫
+# Las tarjetas sin stock se detectan automáticamente y se comprueban cada 12h
 MONEDAS = {
     "TRY": {
         "nombre": "Lira turca",
@@ -52,7 +51,7 @@ MONEDAS = {
             {"slug": "xbox-xbox-live-gift-card-10-brl-xbox-live-key-brazil",  "valor": 10},
             {"slug": "xbox-xbox-live-gift-card-15-brl-xbox-live-key-brazil",  "valor": 15},
             {"slug": "xbox-xbox-live-gift-card-20-brl-xbox-live-key-brazil",  "valor": 20},
-            {"slug": "xbox-xbox-live-gift-card-30-brl-xbox-live-key-brazil",  "valor": 30, "sin_stock": True},
+            {"slug": "xbox-xbox-live-gift-card-30-brl-xbox-live-key-brazil",  "valor": 30},
             {"slug": "xbox-xbox-live-gift-card-40-brl-xbox-live-key-brazil",  "valor": 40},
             {"slug": "xbox-xbox-live-gift-card-50-brl-xbox-live-key-brazil",  "valor": 50},
             {"slug": "xbox-xbox-live-gift-card-100-brl-xbox-live-key-brazil", "valor": 100},
@@ -64,9 +63,9 @@ MONEDAS = {
         "nombre": "Peso chileno",
         "bandera": "🇨🇱",
         "slugs": [
-            {"slug": "xbox-xbox-live-gift-card-10-000-clp-xbox-live-key-chile", "valor": 10000, "sin_stock": True},
-            {"slug": "xbox-xbox-live-gift-card-20-000-clp-xbox-live-key-chile", "valor": 20000, "sin_stock": True},
-            {"slug": "xbox-xbox-live-gift-card-35-000-clp-xbox-live-key-chile", "valor": 35000, "sin_stock": True},
+            {"slug": "xbox-xbox-live-gift-card-10-000-clp-xbox-live-key-chile", "valor": 10000},
+            {"slug": "xbox-xbox-live-gift-card-20-000-clp-xbox-live-key-chile", "valor": 20000},
+            {"slug": "xbox-xbox-live-gift-card-35-000-clp-xbox-live-key-chile", "valor": 35000},
         ],
         "umbral": UMBRALES["CLP"]["umbral"],
         "umbral_bajo": UMBRALES["CLP"]["umbral_bajo"],
@@ -113,11 +112,11 @@ MONEDAS = {
         "nombre": "Dólar taiwanés",
         "bandera": "🇹🇼",
         "slugs": [
-            {"slug": "xbox-xbox-live-gift-card-200-twd-xbox-live-key-taiwan",  "valor": 200, "sin_stock": True},
-            {"slug": "xbox-xbox-live-gift-card-250-twd-xbox-live-key-taiwan",  "valor": 250, "sin_stock": True},
-            {"slug": "xbox-xbox-live-gift-card-500-twd-xbox-live-key-taiwan",  "valor": 500, "sin_stock": True},
-            {"slug": "xbox-xbox-live-gift-card-1000-twd-xbox-live-key-taiwan", "valor": 1000, "sin_stock": True},
-            {"slug": "xbox-xbox-live-gift-card-2000-twd-xbox-live-key-taiwan", "valor": 2000, "sin_stock": True},
+            {"slug": "xbox-xbox-live-gift-card-200-twd-xbox-live-key-taiwan",  "valor": 200},
+            {"slug": "xbox-xbox-live-gift-card-250-twd-xbox-live-key-taiwan",  "valor": 250},
+            {"slug": "xbox-xbox-live-gift-card-500-twd-xbox-live-key-taiwan",  "valor": 500},
+            {"slug": "xbox-xbox-live-gift-card-1000-twd-xbox-live-key-taiwan", "valor": 1000},
+            {"slug": "xbox-xbox-live-gift-card-2000-twd-xbox-live-key-taiwan", "valor": 2000},
         ],
         "umbral": UMBRALES["TWD"]["umbral"],
         "umbral_bajo": UMBRALES["TWD"]["umbral_bajo"],
@@ -159,6 +158,7 @@ HEADERS = {
 }
 
 ESTADO_FILE = "estado.json"
+HORAS_RECHECK_SIN_STOCK = 12  # cada cuántas horas se comprueban tarjetas sin stock
 
 # ─── FUNCIONES ────────────────────────────────────────────────────────────────
 
@@ -184,9 +184,7 @@ def send_telegram_file(filename, content, caption=""):
         print(f"Error enviando archivo Telegram: {e}")
 
 def get_tipo_cambio_real(monedas):
-    """Obtiene todos los tipos de cambio en una sola petición"""
     try:
-        # Filtrar SAR porque frankfurter no lo soporta
         monedas_api = [m for m in monedas if m != "SAR"] + ["USD"]
         simbolos = ",".join(monedas_api)
         r = requests.get(
@@ -245,7 +243,6 @@ def get_price(slug):
             print(f"❌ Error GraphQL: {data['errors']}")
             return None, False
         edges = data["data"]["productNoCache"]["auctions"]["edges"]
-        # Precios con stock
         prices_con_stock = [
             e["node"]["price"]["amount"]
             for e in edges
@@ -253,14 +250,13 @@ def get_price(slug):
             and e["node"]["isCurrentlyAvailable"]
             and e["node"]["price"]["amount"] > 0
         ]
-        # Verificar si hay edges pero sin stock
         hay_producto = len(edges) > 0
         if prices_con_stock:
             return min(prices_con_stock), True
         elif hay_producto:
             return None, False  # Existe pero sin stock
         else:
-            return None, None  # No existe o slug incorrecto
+            return None, None   # Slug incorrecto o no existe
     except Exception as e:
         print(f"Error de red en {slug}: {e}")
         return None, None
@@ -269,25 +265,49 @@ def cargar_estado():
     if os.path.exists(ESTADO_FILE):
         with open(ESTADO_FILE, "r") as f:
             return json.load(f)
-    return {"monedas": {}, "historial": [], "resumenes": {}}
+    return {"monedas": {}, "historial": [], "resumenes": {}, "stock": {}}
 
 def guardar_estado(estado):
     with open(ESTADO_FILE, "w") as f:
         json.dump(estado, f, indent=2)
 
-def get_ratios_moneda(config):
-    """Devuelve lista de resultados con precio y stock para cada tarjeta"""
+def debe_comprobar_slug(slug, estado, ahora):
+    """Decide si hay que consultar un slug según su estado de stock"""
+    info = estado.get("stock", {}).get(slug)
+    if info is None:
+        return True  # nunca comprobado, siempre consultar
+    if info.get("tiene_stock"):
+        return True  # tiene stock, consultar siempre
+    # Sin stock: solo consultar cada HORAS_RECHECK_SIN_STOCK horas
+    ultima = info.get("ultima_comprobacion")
+    if not ultima:
+        return True
+    diff = ahora - datetime.fromisoformat(ultima)
+    return diff >= timedelta(hours=HORAS_RECHECK_SIN_STOCK)
+
+def actualizar_stock_slug(slug, tiene_stock, ahora, estado):
+    if "stock" not in estado:
+        estado["stock"] = {}
+    estado["stock"][slug] = {
+        "tiene_stock": tiene_stock,
+        "ultima_comprobacion": ahora.isoformat()
+    }
+
+def get_ratios_moneda(config, estado, ahora):
     resultados = []
     for item in config["slugs"]:
         slug = item["slug"]
         valor = item["valor"]
-        forzar_sin_stock = item.get("sin_stock", False)
 
-        if forzar_sin_stock:
+        if not debe_comprobar_slug(slug, estado, ahora):
+            # Sin stock y no toca recomprobar aún
+            print(f"  {valor} = ⚫ Sin stock (sin recomprobar)")
             resultados.append({"valor": valor, "precio_eur": None, "ratio": None, "stock": False})
             continue
 
         price_cents, tiene_stock = get_price(slug)
+        actualizar_stock_slug(slug, bool(tiene_stock), ahora, estado)
+
         if price_cents and tiene_stock:
             price_eur = price_cents / 100
             ratio = valor / price_eur
@@ -310,7 +330,6 @@ def procesar_alertas(moneda, config, resultados, estado, tipos_cambio):
     })
 
     if not con_stock:
-        # Solo alertar una vez si no hay datos (no repetir cada 20 min)
         if not estado_moneda.get("sin_datos_alertado"):
             send_telegram(
                 f"⚠️ <b>Sin stock: {config['bandera']} {moneda}</b>\n"
@@ -328,14 +347,12 @@ def procesar_alertas(moneda, config, resultados, estado, tipos_cambio):
     umbral_bajo = config["umbral_bajo"]
     tipo_cambio = tipos_cambio.get(moneda)
 
-    # Comparativa con tipo de cambio real
     comparativa = ""
     if tipo_cambio:
         margen = ((mejor_ratio / tipo_cambio) - 1) * 100
         signo = "+" if margen >= 0 else ""
         comparativa = f"\n💱 Cambio real: {tipo_cambio:.2f} {moneda}/€ ({signo}{margen:.1f}% vs mercado)"
 
-    # Aviso si cae por debajo del umbral bajo
     if mejor_ratio < umbral_bajo and not estado_moneda.get("bajo_umbral_bajo"):
         send_telegram(
             f"📉 <b>Precio alto {config['bandera']} {moneda}</b>\n"
@@ -346,7 +363,6 @@ def procesar_alertas(moneda, config, resultados, estado, tipos_cambio):
     elif mejor_ratio >= umbral_bajo:
         estado_moneda["bajo_umbral_bajo"] = False
 
-    # Alerta por umbral alto
     if mejor_ratio >= umbral:
         ultimo = estado_moneda.get("ultimo_ratio_alertado")
         debe_alertar = False
@@ -419,7 +435,6 @@ def formatear_bloque_moneda(moneda, config, resultados, tipo_cambio):
     lineas = [f"{config['bandera']} <b>{moneda}</b>"]
 
     if not con_stock:
-        # Todas sin stock
         for r in resultados:
             lineas.append(f"  {r['valor']} {moneda} → ⚫ Sin stock")
         lineas.append("")
@@ -449,7 +464,7 @@ def enviar_resumen_diario(estado, ahora, tipos_cambio):
     lineas = [f"📊 <b>Resumen diario Eneba — {ahora.strftime('%d/%m/%Y')}</b>\n"]
     for moneda, config in MONEDAS.items():
         print(f"  Obteniendo {moneda}...")
-        resultados = get_ratios_moneda(config)
+        resultados = get_ratios_moneda(config, estado, ahora)
         tipo_cambio = tipos_cambio.get(moneda)
         lineas += formatear_bloque_moneda(moneda, config, resultados, tipo_cambio)
     send_telegram("\n".join(lineas))
@@ -479,7 +494,7 @@ def enviar_resumen_semanal(estado, ahora):
 
 def main():
     ahora = datetime.now(timezone.utc)
-    hora_canarias = ahora.hour - 1
+    hora_utc = ahora.hour  # UTC = hora Canarias en invierno, Canarias+1 en verano
     es_lunes = ahora.weekday() == 0
 
     estado = cargar_estado()
@@ -487,19 +502,19 @@ def main():
     # Obtener todos los tipos de cambio de una sola vez
     tipos_cambio = get_tipo_cambio_real(list(MONEDAS.keys()))
 
-    # Resumen semanal: lunes después de las 9am
-    if es_lunes and hora_canarias >= 9 and debe_enviar_resumen("semanal", estado, ahora):
+    # Resumen semanal: lunes después de las 9 UTC
+    if es_lunes and hora_utc >= 9 and debe_enviar_resumen("semanal", estado, ahora):
         print("Enviando resumen semanal...")
         enviar_resumen_semanal(estado, ahora)
 
-    # Resumen diario: después de las 9am
-    if debe_enviar_resumen("diario", estado, ahora):
+    # Resumen diario: después de las 9 UTC
+    if hora_utc >= 9 and debe_enviar_resumen("diario", estado, ahora):
         print("Enviando resumen diario...")
         enviar_resumen_diario(estado, ahora, tipos_cambio)
     else:
         for moneda, config in MONEDAS.items():
             print(f"\nComprobando {moneda}...")
-            resultados = get_ratios_moneda(config)
+            resultados = get_ratios_moneda(config, estado, ahora)
             procesar_alertas(moneda, config, resultados, estado, tipos_cambio)
             guardar_historial(moneda, resultados, estado, ahora)
 
