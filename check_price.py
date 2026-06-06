@@ -51,12 +51,12 @@ def get_price(slug):
         }
     }
     r = requests.post("https://graphql.eneba.com/graphql/", json=body, headers=HEADERS)
-    print(f"{slug}: status {r.status_code}")
     if r.status_code == 200:
         data = r.json()
         try:
-            amount = data["data"]["productNoCache"]["preferredAuction"]["price"]["amount"]
-            return amount  # en céntimos
+            edges = data["data"]["productNoCache"]["auctions"]["edges"]
+            prices = [e["node"]["price"]["amount"] for e in edges if e["node"]["isInStock"] and e["node"]["isCurrentlyAvailable"]]
+            return min(prices) if prices else None
         except:
             return None
     return None
