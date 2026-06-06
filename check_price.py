@@ -439,21 +439,32 @@ def formatear_bloque_moneda(moneda, config, resultados, tipo_cambio):
 
     for r in resultados:
         if not r["stock"]:
-            lineas.append(f"  {r['valor']} {moneda} → ⚫ Sin stock")
+            lineas.append(
+                f"  {r['valor']} {moneda} → ⚫ Sin stock"
+            )
+
         elif r["valor"] == mejor["valor"]:
-            lineas.append(f"  🏆 <b>{r['valor']} {moneda} → {r['ratio']:.2f} {moneda}/€</b>")
+            lineas.append(
+                f"  🏆 <b>{r['valor']} {moneda} → {r['precio_eur']:.2f}€ → {r['ratio']:.2f} {moneda}/€</b>"
+            )
+
         else:
-            lineas.append(f"  {r['valor']} {moneda} → {r['ratio']:.2f} {moneda}/€")
+            lineas.append(
+                f"  {r['valor']} {moneda} → {r['precio_eur']:.2f}€ → {r['ratio']:.2f} {moneda}/€"
+            )
 
     lineas.append(f"  (umbral: {config['umbral']})")
 
     if tipo_cambio:
-        margen = ((mejor["ratio"] / tipo_cambio) - 1) * 100
+        margen = ((mejor['ratio'] / tipo_cambio) - 1) * 100
         signo = "+" if margen >= 0 else ""
-        lineas.append(f"  💱 Cambio real: {tipo_cambio:.2f} {moneda}/€ ({signo}{margen:.1f}%)")
+        lineas.append(
+            f"  💱 Cambio real: {tipo_cambio:.2f} {moneda}/€ ({signo}{margen:.1f}%)"
+        )
 
     lineas.append("")
     return lineas
+
 
 def enviar_resumen_diario(estado, ahora, tipos_cambio):
     lineas = [f"📊 <b>Resumen diario Eneba — {ahora.strftime('%d/%m/%Y')}</b>\n"]
