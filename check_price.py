@@ -24,8 +24,8 @@ MONEDAS = {
             "xbox-xbox-live-gift-card-300-try-xbox-live-key-turkey",
         ],
         "valores": [25, 50, 100, 250, 300],
-        "umbral": float(os.environ.get("PRICE_THRESHOLD_TRY", os.environ.get("PRICE_THRESHOLD", "54"))),
-        "umbral_bajo": 40,  # avisa si cae por debajo de este ratio (precio muy alto)
+        "umbral": 54,
+        "umbral_bajo": 40,
     },
     # Ejemplo BRL (descomentar cuando quieras añadirlo):
     # "BRL": {
