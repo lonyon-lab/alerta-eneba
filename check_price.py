@@ -1,3 +1,10 @@
+# Script para trackear el ratio TRY/€ en Eneba
+# Web: https://www.eneba.com/es/xbox-xbox-live-gift-card-300-try-xbox-live-key-turkey
+# Objetivo: alertar por Telegram cuando cualquier tarjeta Xbox TRY supere X TRY/€
+# La API es GraphQL en graphql.eneba.com
+# Si se rompe: buscar nuevo sha256Hash en Network del navegador filtrando por "graphql"
+# y actualizar la variable SHA en este script
+
 import os
 import re
 import requests
