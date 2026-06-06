@@ -1,10 +1,3 @@
-Perfecto, esto es exactamente lo que necesitaba. Veo algo importante: la cookie `cf_clearance` que es la protección de Cloudflare. Esa cookie es personal tuya y caduca, así que no podemos usarla directamente en el script.
-
-Pero lo que sí podemos usar es toda la estructura de la petición GraphQL: la URL, los headers básicos y el body con `currency: EUR`. El problema será si Cloudflare bloquea las peticiones sin esa cookie.
-
-Vamos a probarlo. Reemplaza todo el `check_price.py` con esto:
-
-```python
 import os
 import re
 import requests
@@ -104,6 +97,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-```
-
-Guarda, ejecuta y dime qué aparece en el log.
