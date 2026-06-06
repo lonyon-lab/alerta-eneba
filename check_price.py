@@ -9,8 +9,10 @@ TOKEN = os.environ["TELEGRAM_TOKEN"]
 CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
 def send_telegram(msg):
-    requests.get(f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+    response = requests.get(f"https://api.telegram.org/bot{TOKEN}/sendMessage",
                  params={"chat_id": CHAT_ID, "text": msg})
+    print(f"Telegram status: {response.status_code}")
+    print(f"Telegram response: {response.text}")
 
 def get_ratios():
     print("Iniciando Playwright...")
