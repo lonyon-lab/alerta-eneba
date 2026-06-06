@@ -1,8 +1,16 @@
 import os
 import re
+import requests
 from playwright.sync_api import sync_playwright
 
 URL = "https://www.eneba.com/es/xbox-xbox-live-gift-card-300-try-xbox-live-key-turkey"
+THRESHOLD = float(os.environ["PRICE_THRESHOLD"])
+TOKEN = os.environ["TELEGRAM_TOKEN"]
+CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
+
+def send_telegram(msg):
+    requests.get(f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+                 params={"chat_id": CHAT_ID, "text": msg})
 
 def get_ratios():
     with sync_playwright() as p:
@@ -21,12 +29,4 @@ def get_ratios():
         page.wait_for_timeout(2000)
         page.goto(URL, wait_until="networkidle", timeout=60000)
         page.wait_for_timeout(6000)
-        content = page.content()
-        browser.close()
-
-    # Imprimir todos los fragmentos alrededor de TRY por
-    for m in re.finditer(r'.{0,30}TRY por.{0,60}', content):
-        print(">>>", m.group())
-
-if __name__ == "__main__":
-    get_ratios()
+        content = page.content(
