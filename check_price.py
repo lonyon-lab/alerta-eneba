@@ -79,8 +79,9 @@ def main():
                 best_ratio = ratio
                 best_info = (try_val, price_eur)
 
-    if not best_info:
+   if not best_info:
         print("No se obtuvieron precios")
+        send_telegram("⚠️ Alerta Eneba: el script no pudo obtener precios. Puede que la API haya cambiado.")
         return
 
     print(f"Mejor ratio: {best_ratio:.2f} TRY/€ (umbral: {THRESHOLD})")
