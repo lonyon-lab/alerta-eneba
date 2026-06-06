@@ -6,7 +6,6 @@
 # y actualizar la variable SHA en este script
 
 import os
-import re
 import requests
 
 THRESHOLD = float(os.environ["PRICE_THRESHOLD"])
@@ -14,18 +13,14 @@ TOKEN = os.environ["TELEGRAM_TOKEN"]
 CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
 SLUGS = [
-    "xbox-xbox-live-gift-card-10-try-xbox-live-key-turkey",
-    "xbox-xbox-live-gift-card-20-try-xbox-live-key-turkey",
     "xbox-xbox-live-gift-card-25-try-xbox-live-key-turkey",
-    "xbox-xbox-live-gift-card-40-try-xbox-live-key-turkey",
     "xbox-xbox-live-gift-card-50-try-xbox-live-key-turkey",
-    "xbox-xbox-live-gift-card-80-try-xbox-live-key-turkey",
     "xbox-xbox-live-gift-card-100-try-xbox-live-key-turkey",
     "xbox-xbox-live-gift-card-250-try-xbox-live-key-turkey",
     "xbox-xbox-live-gift-card-300-try-xbox-live-key-turkey",
 ]
 
-TRY_VALUES = [10, 20, 25, 40, 50, 80, 100, 250, 300]
+TRY_VALUES = [25, 50, 100, 250, 300]
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:143.0) Gecko/20100101 Firefox/143.0",
@@ -86,7 +81,7 @@ def main():
                 best_ratio = ratio
                 best_info = (try_val, price_eur)
 
-   if not best_info:
+    if not best_info:
         print("No se obtuvieron precios")
         send_telegram("⚠️ Alerta Eneba: el script no pudo obtener precios. Puede que la API haya cambiado.")
         return
