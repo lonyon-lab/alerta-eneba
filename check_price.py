@@ -185,21 +185,16 @@ def send_telegram_file(filename, content, caption=""):
 
 def get_tipo_cambio_real(monedas):
     try:
-        monedas_api = [m for m in monedas if m != "SAR"] + ["USD"]
-        simbolos = ",".join(monedas_api)
         r = requests.get(
-            f"https://api.frankfurter.app/latest?from=EUR&to={simbolos}",
+            "https://open.er-api.com/v6/latest/EUR",
             timeout=5
         )
-        rates = {}
         if r.status_code == 200:
             rates = r.json().get("rates", {})
-        # SAR calculado via USD (tipo fijo 1 USD = 3.75 SAR)
-        if "SAR" in monedas and "USD" in rates:
-            rates["SAR"] = round(rates["USD"] * 3.75, 4)
-        return rates
+            return {m: rates[m] for m in monedas if m in rates}
     except:
-        return {}
+        pass
+    return {}
 
 def get_price(slug):
     body = {
