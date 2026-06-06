@@ -24,14 +24,10 @@ def get_ratios():
             locale="es-ES",
             extra_http_headers={"Accept-Language": "es-ES,es;q=0.9"}
         )
-        context.add_cookies([{
-            "name": "region",
-            "value": '{"country":"ES","currency":"EUR","language":"es"}',
-            "domain": ".eneba.com",
-            "path": "/"
-        }])
         page = context.new_page()
         page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        page.goto("https://www.eneba.com/es/", wait_until="networkidle", timeout=60000)
+        page.wait_for_timeout(2000)
         page.goto(URL, wait_until="networkidle", timeout=60000)
         page.wait_for_timeout(6000)
         content = page.content()
@@ -40,7 +36,7 @@ def get_ratios():
     for m in re.finditer(r'.{0,30}TRY por.{0,60}', content):
         print(">>>", m.group())
 
-    matches = re.findall(r'([\d.]+)\s*TRY por\s*<span[^>]*>1(?:&nbsp;|\s*)(?:US\$|\$|€|EUR)</span>', content)
+    matches = re.findall(r'([\d.]+)\s*TRY por\s*<span[^>]*>1(?:&nbsp;|\s*)US\$</span>', content)
     ratios = [float(m) for m in matches]
     return ratios
 
@@ -51,13 +47,13 @@ def main():
         return
 
     best = max(ratios)
-    print(f"Mejor ratio: {best} TRY/€ (umbral: {THRESHOLD})")
+    print(f"Mejor ratio: {best} TRY/$ (umbral: {THRESHOLD})")
 
     if best >= THRESHOLD:
         send_telegram(
             f"🚨 Alerta Eneba!\n"
-            f"Ratio actual: {best} TRY por €\n"
-            f"Supera tu umbral de {THRESHOLD} TRY/€\n"
+            f"Ratio actual: {best} TRY por $\n"
+            f"Supera tu umbral de {THRESHOLD} TRY/$\n"
             f"{URL}"
         )
     else:
