@@ -1,0 +1,17 @@
+{
+  "monedas": {
+    "TRY": {
+      "ultimo_ratio_alertado": 52.083333333333336,
+      "sobre_umbral": true
+    }
+  },
+  "historial": [
+    {
+      "moneda": "TRY",
+      "timestamp": "2026-06-06T17:11:02.623553+00:00",
+      "mejor_ratio": 52.08,
+      "mejor_valor": 25,
+      "mejor_precio_eur": 0.48
+    }
+  ]
+}
