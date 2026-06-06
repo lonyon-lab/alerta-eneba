@@ -487,7 +487,7 @@ def main():
         enviar_resumen_semanal(estado, ahora)
 
     # Resumen diario: después de las 9am
-    if hora_canarias >= 9 and debe_enviar_resumen("diario", estado, ahora):
+    if debe_enviar_resumen("diario", estado, ahora):
         print("Enviando resumen diario...")
         enviar_resumen_diario(estado, ahora, tipos_cambio)
     else:
