@@ -1,5 +1,5 @@
 name: Alerta Eneba TRY
-# despierta
+
 on:
   schedule:
     - cron: '*/20 * * * *'
@@ -14,7 +14,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Instalar dependencias
-        run: pip install playwright requests && playwright install chromium
+        run: pip install requests
       - name: Ejecutar script
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
