@@ -14,7 +14,7 @@ SHA = "c3aaf0194bab3a8481512069d9bbc707037714c0a60f603497bc820f00a91c11_50e5e0d9
 # umbral:      avisa cuando el ratio SUBE de este valor (precio barato)
 # umbral_bajo: avisa cuando el ratio BAJA de este valor (precio caro, algo raro)
 UMBRALES = {
-    "TRY": {"umbral": 54,   "umbral_bajo": 48},
+    "TRY": {"umbral": 52.7,   "umbral_bajo": 48},
     "BRL": {"umbral": 6.8,  "umbral_bajo": 5.5},
     "CLP": {"umbral": 42,   "umbral_bajo": 33},
     "COP": {"umbral": 4200, "umbral_bajo": 3300},
