@@ -13,5 +13,8 @@
       "mejor_valor": 25,
       "mejor_precio_eur": 0.48
     }
-  ]
+  ],
+  "resumenes": {
+    "ultimo_diario": "2026-06-06"
+  }
 }
