@@ -19,7 +19,7 @@ UMBRALES = {
     "CLP": {"umbral": 42,   "umbral_bajo": 33},
     "COP": {"umbral": 4200, "umbral_bajo": 3300},
     "ZAR": {"umbral": 20.5, "umbral_bajo": 16},
-    "SAR": {"umbral": 4.1,  "umbral_bajo": 3.2},
+    "SAR": {"umbral": 4.45,  "umbral_bajo": 3.2},
     "TWD": {"umbral": 38,   "umbral_bajo": 30},
     "HKD": {"umbral": 9.2,  "umbral_bajo": 7.2},
 }
