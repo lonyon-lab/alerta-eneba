@@ -186,16 +186,22 @@ def send_telegram_file(filename, content, caption=""):
 def get_tipo_cambio_real(monedas):
     """Obtiene todos los tipos de cambio en una sola petición"""
     try:
-        simbolos = ",".join(monedas)
+        # Filtrar SAR porque frankfurter no lo soporta
+        monedas_api = [m for m in monedas if m != "SAR"]
+        simbolos = ",".join(monedas_api)
         r = requests.get(
             f"https://api.frankfurter.app/latest?from=EUR&to={simbolos}",
             timeout=5
         )
+        rates = {}
         if r.status_code == 200:
-            return r.json().get("rates", {})
+            rates = r.json().get("rates", {})
+        # SAR calculado via USD (tipo fijo 1 USD = 3.75 SAR)
+        if "SAR" in monedas and "USD" in rates:
+            rates["SAR"] = round(rates["USD"] * 3.75, 4)
+        return rates
     except:
-        pass
-    return {}
+        return {}
 
 def get_price(slug):
     body = {
