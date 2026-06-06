@@ -28,18 +28,19 @@ UMBRALES = {
 # Para añadir una moneda nueva:
 # 1. Añade su umbral en UMBRALES arriba
 # 2. Añade su bloque aquí con slugs y valores
+# NOTA: cada slug tiene un campo opcional "sin_stock": True para tarjetas que
+# existen pero están habitualmente agotadas — se muestran en el resumen como ⚫
 MONEDAS = {
     "TRY": {
         "nombre": "Lira turca",
         "bandera": "🇹🇷",
         "slugs": [
-            "xbox-xbox-live-gift-card-25-try-xbox-live-key-turkey",
-            "xbox-xbox-live-gift-card-50-try-xbox-live-key-turkey",
-            "xbox-xbox-live-gift-card-100-try-xbox-live-key-turkey",
-            "xbox-xbox-live-gift-card-250-try-xbox-live-key-turkey",
-            "xbox-xbox-live-gift-card-300-try-xbox-live-key-turkey",
+            {"slug": "xbox-xbox-live-gift-card-25-try-xbox-live-key-turkey",  "valor": 25},
+            {"slug": "xbox-xbox-live-gift-card-50-try-xbox-live-key-turkey",  "valor": 50},
+            {"slug": "xbox-xbox-live-gift-card-100-try-xbox-live-key-turkey", "valor": 100},
+            {"slug": "xbox-xbox-live-gift-card-250-try-xbox-live-key-turkey", "valor": 250},
+            {"slug": "xbox-xbox-live-gift-card-300-try-xbox-live-key-turkey", "valor": 300},
         ],
-        "valores": [25, 50, 100, 250, 300],
         "umbral": UMBRALES["TRY"]["umbral"],
         "umbral_bajo": UMBRALES["TRY"]["umbral_bajo"],
     },
@@ -47,16 +48,15 @@ MONEDAS = {
         "nombre": "Real brasileño",
         "bandera": "🇧🇷",
         "slugs": [
-            "xbox-xbox-live-gift-card-5-brl-xbox-live-key-brazil",
-            "xbox-xbox-live-gift-card-10-brl-xbox-live-key-brazil",
-            "xbox-xbox-live-gift-card-15-brl-xbox-live-key-brazil",
-            "xbox-xbox-live-gift-card-20-brl-xbox-live-key-brazil",
-            "xbox-xbox-live-gift-card-30-brl-xbox-live-key-brazil",
-            "xbox-xbox-live-gift-card-40-brl-xbox-live-key-brazil",
-            "xbox-xbox-live-gift-card-50-brl-xbox-live-key-brazil",
-            "xbox-xbox-live-gift-card-100-brl-xbox-live-key-brazil",
+            {"slug": "xbox-xbox-live-gift-card-5-brl-xbox-live-key-brazil",   "valor": 5},
+            {"slug": "xbox-xbox-live-gift-card-10-brl-xbox-live-key-brazil",  "valor": 10},
+            {"slug": "xbox-xbox-live-gift-card-15-brl-xbox-live-key-brazil",  "valor": 15},
+            {"slug": "xbox-xbox-live-gift-card-20-brl-xbox-live-key-brazil",  "valor": 20},
+            {"slug": "xbox-xbox-live-gift-card-30-brl-xbox-live-key-brazil",  "valor": 30, "sin_stock": True},
+            {"slug": "xbox-xbox-live-gift-card-40-brl-xbox-live-key-brazil",  "valor": 40},
+            {"slug": "xbox-xbox-live-gift-card-50-brl-xbox-live-key-brazil",  "valor": 50},
+            {"slug": "xbox-xbox-live-gift-card-100-brl-xbox-live-key-brazil", "valor": 100},
         ],
-        "valores": [5, 10, 15, 20, 30, 40, 50, 100],
         "umbral": UMBRALES["BRL"]["umbral"],
         "umbral_bajo": UMBRALES["BRL"]["umbral_bajo"],
     },
@@ -64,11 +64,10 @@ MONEDAS = {
         "nombre": "Peso chileno",
         "bandera": "🇨🇱",
         "slugs": [
-            "xbox-xbox-live-gift-card-10-000-clp-xbox-live-key-chile",
-            "xbox-xbox-live-gift-card-20-000-clp-xbox-live-key-chile",
-            "xbox-xbox-live-gift-card-35-000-clp-xbox-live-key-chile",
+            {"slug": "xbox-xbox-live-gift-card-10-000-clp-xbox-live-key-chile", "valor": 10000, "sin_stock": True},
+            {"slug": "xbox-xbox-live-gift-card-20-000-clp-xbox-live-key-chile", "valor": 20000, "sin_stock": True},
+            {"slug": "xbox-xbox-live-gift-card-35-000-clp-xbox-live-key-chile", "valor": 35000, "sin_stock": True},
         ],
-        "valores": [10000, 20000, 35000],
         "umbral": UMBRALES["CLP"]["umbral"],
         "umbral_bajo": UMBRALES["CLP"]["umbral_bajo"],
     },
@@ -76,12 +75,11 @@ MONEDAS = {
         "nombre": "Peso colombiano",
         "bandera": "🇨🇴",
         "slugs": [
-            "xbox-xbox-live-gift-card-30-000-cop-key-colombia",
-            "xbox-xbox-live-gift-card-55-000-cop-key-colombia",
-            "xbox-xbox-live-gift-card-100-000-cop-key-colombia",
-            "xbox-xbox-live-gift-card-150-000-cop-key-colombia",
+            {"slug": "xbox-xbox-live-gift-card-30-000-cop-key-colombia",   "valor": 30000},
+            {"slug": "xbox-xbox-live-gift-card-55-000-cop-key-colombia",   "valor": 55000},
+            {"slug": "xbox-xbox-live-gift-card-100-000-cop-key-colombia",  "valor": 100000},
+            {"slug": "xbox-xbox-live-gift-card-150-000-cop-key-colombia",  "valor": 150000},
         ],
-        "valores": [30000, 55000, 100000, 150000],
         "umbral": UMBRALES["COP"]["umbral"],
         "umbral_bajo": UMBRALES["COP"]["umbral_bajo"],
     },
@@ -89,14 +87,13 @@ MONEDAS = {
         "nombre": "Rand sudafricano",
         "bandera": "🇿🇦",
         "slugs": [
-            "xbox-xbox-live-gift-card-50-zar-xbox-live-key-south-africa",
-            "xbox-xbox-live-gift-card-100-zar-xbox-live-key-south-africa",
-            "xbox-xbox-live-gift-card-150-zar-xbox-live-key-south-africa",
-            "xbox-xbox-live-gift-card-200-zar-xbox-live-key-south-africa",
-            "xbox-xbox-live-gift-card-500-zar-xbox-live-key-south-africa",
-            "xbox-xbox-live-gift-card-600-zar-xbox-live-key-south-africa",
+            {"slug": "xbox-xbox-live-gift-card-50-zar-xbox-live-key-south-africa",  "valor": 50},
+            {"slug": "xbox-xbox-live-gift-card-100-zar-xbox-live-key-south-africa", "valor": 100},
+            {"slug": "xbox-xbox-live-gift-card-150-zar-xbox-live-key-south-africa", "valor": 150},
+            {"slug": "xbox-xbox-live-gift-card-200-zar-xbox-live-key-south-africa", "valor": 200},
+            {"slug": "xbox-xbox-live-gift-card-500-zar-xbox-live-key-south-africa", "valor": 500},
+            {"slug": "xbox-xbox-live-gift-card-600-zar-xbox-live-key-south-africa", "valor": 600},
         ],
-        "valores": [50, 100, 150, 200, 500, 600],
         "umbral": UMBRALES["ZAR"]["umbral"],
         "umbral_bajo": UMBRALES["ZAR"]["umbral_bajo"],
     },
@@ -104,12 +101,11 @@ MONEDAS = {
         "nombre": "Riyal saudí",
         "bandera": "🇸🇦",
         "slugs": [
-            "xbox-xbox-live-gift-card-50-sar-xbox-live-key-saudi-arabia",
-            "xbox-xbox-live-gift-card-100-sar-xbox-live-key-saudi-arabia",
-            "xbox-xbox-live-gift-card-200-sar-xbox-live-key-saudi-arabia",
-            "xbox-xbox-live-gift-card-300-sar-xbox-live-key-saudi-arabia",
+            {"slug": "xbox-xbox-live-gift-card-50-sar-xbox-live-key-saudi-arabia",  "valor": 50},
+            {"slug": "xbox-xbox-live-gift-card-100-usd-xbox-live-key-saudi-arabia", "valor": 100},
+            {"slug": "xbox-xbox-live-gift-card-200-sar-xbox-live-key-saudi-arabia", "valor": 200},
+            {"slug": "xbox-xbox-live-gift-card-300-sar-xbox-live-key-saudi-arabia", "valor": 300},
         ],
-        "valores": [50, 100, 200, 300],
         "umbral": UMBRALES["SAR"]["umbral"],
         "umbral_bajo": UMBRALES["SAR"]["umbral_bajo"],
     },
@@ -117,13 +113,12 @@ MONEDAS = {
         "nombre": "Dólar taiwanés",
         "bandera": "🇹🇼",
         "slugs": [
-            "xbox-xbox-live-gift-card-200-twd-xbox-live-key-taiwan",
-            "xbox-xbox-live-gift-card-250-twd-xbox-live-key-taiwan",
-            "xbox-xbox-live-gift-card-500-twd-xbox-live-key-taiwan",
-            "xbox-xbox-live-gift-card-1000-twd-xbox-live-key-taiwan",
-            "xbox-xbox-live-gift-card-2000-twd-xbox-live-key-taiwan",
+            {"slug": "xbox-xbox-live-gift-card-200-twd-xbox-live-key-taiwan",  "valor": 200, "sin_stock": True},
+            {"slug": "xbox-xbox-live-gift-card-250-twd-xbox-live-key-taiwan",  "valor": 250, "sin_stock": True},
+            {"slug": "xbox-xbox-live-gift-card-500-twd-xbox-live-key-taiwan",  "valor": 500, "sin_stock": True},
+            {"slug": "xbox-xbox-live-gift-card-1000-twd-xbox-live-key-taiwan", "valor": 1000, "sin_stock": True},
+            {"slug": "xbox-xbox-live-gift-card-2000-twd-xbox-live-key-taiwan", "valor": 2000, "sin_stock": True},
         ],
-        "valores": [200, 250, 500, 1000, 2000],
         "umbral": UMBRALES["TWD"]["umbral"],
         "umbral_bajo": UMBRALES["TWD"]["umbral_bajo"],
     },
@@ -131,11 +126,10 @@ MONEDAS = {
         "nombre": "Dólar de Hong Kong",
         "bandera": "🇭🇰",
         "slugs": [
-            "xbox-xbox-live-gift-card-150-hkd-xbox-live-key-hong-kong",
-            "xbox-xbox-live-gift-card-300-hkd-xbox-live-key-hong-kong",
-            "xbox-xbox-live-gift-card-600-hkd-xbox-live-key-hong-kong",
+            {"slug": "xbox-xbox-live-gift-card-150-hkd-xbox-live-key-hong-kong", "valor": 150},
+            {"slug": "xbox-xbox-live-gift-card-300-hkd-xbox-live-key-hong-kong", "valor": 300},
+            {"slug": "xbox-xbox-live-gift-card-600-hkd-xbox-live-key-hong-kong", "valor": 600},
         ],
-        "valores": [150, 300, 600],
         "umbral": UMBRALES["HKD"]["umbral"],
         "umbral_bajo": UMBRALES["HKD"]["umbral_bajo"],
     },
@@ -165,7 +159,6 @@ HEADERS = {
 }
 
 ESTADO_FILE = "estado.json"
-HISTORIAL_MESES = 6
 
 # ─── FUNCIONES ────────────────────────────────────────────────────────────────
 
@@ -190,17 +183,19 @@ def send_telegram_file(filename, content, caption=""):
     except Exception as e:
         print(f"Error enviando archivo Telegram: {e}")
 
-def get_tipo_cambio_real(moneda):
+def get_tipo_cambio_real(monedas):
+    """Obtiene todos los tipos de cambio en una sola petición"""
     try:
+        simbolos = ",".join(monedas)
         r = requests.get(
-            f"https://api.frankfurter.app/latest?from=EUR&to={moneda}",
+            f"https://api.frankfurter.app/latest?from=EUR&to={simbolos}",
             timeout=5
         )
         if r.status_code == 200:
-            return r.json()["rates"].get(moneda)
+            return r.json().get("rates", {})
     except:
         pass
-    return None
+    return {}
 
 def get_price(slug):
     body = {
@@ -238,23 +233,31 @@ def get_price(slug):
                 "3. Abre petición POST → Payload → sha256Hash\n"
                 "4. Actualiza la variable SHA en check_price.py"
             )
-            return None
+            return None, False
         data = r.json()
         if "errors" in data:
-            print(f"❌ Error en respuesta GraphQL: {data['errors']}")
-            return None
+            print(f"❌ Error GraphQL: {data['errors']}")
+            return None, False
         edges = data["data"]["productNoCache"]["auctions"]["edges"]
-        prices = [
+        # Precios con stock
+        prices_con_stock = [
             e["node"]["price"]["amount"]
             for e in edges
             if e["node"]["isInStock"]
             and e["node"]["isCurrentlyAvailable"]
-            and e["node"]["price"]["amount"] > 1
+            and e["node"]["price"]["amount"] > 0
         ]
-        return min(prices) if prices else None
+        # Verificar si hay edges pero sin stock
+        hay_producto = len(edges) > 0
+        if prices_con_stock:
+            return min(prices_con_stock), True
+        elif hay_producto:
+            return None, False  # Existe pero sin stock
+        else:
+            return None, None  # No existe o slug incorrecto
     except Exception as e:
         print(f"Error de red en {slug}: {e}")
-        return None
+        return None, None
 
 def cargar_estado():
     if os.path.exists(ESTADO_FILE):
@@ -267,42 +270,64 @@ def guardar_estado(estado):
         json.dump(estado, f, indent=2)
 
 def get_ratios_moneda(config):
+    """Devuelve lista de resultados con precio y stock para cada tarjeta"""
     resultados = []
-    for slug, valor in zip(config["slugs"], config["valores"]):
-        price_cents = get_price(slug)
-        if price_cents and price_cents > 1:
+    for item in config["slugs"]:
+        slug = item["slug"]
+        valor = item["valor"]
+        forzar_sin_stock = item.get("sin_stock", False)
+
+        if forzar_sin_stock:
+            resultados.append({"valor": valor, "precio_eur": None, "ratio": None, "stock": False})
+            continue
+
+        price_cents, tiene_stock = get_price(slug)
+        if price_cents and tiene_stock:
             price_eur = price_cents / 100
             ratio = valor / price_eur
-            resultados.append({"valor": valor, "precio_eur": price_eur, "ratio": ratio})
+            resultados.append({"valor": valor, "precio_eur": price_eur, "ratio": ratio, "stock": True})
             print(f"  {valor} = {price_eur:.2f}€ → {ratio:.2f}/€")
-        time.sleep(0.5)  # delay para no saturar Eneba
+        else:
+            resultados.append({"valor": valor, "precio_eur": None, "ratio": None, "stock": False})
+            print(f"  {valor} = ⚫ Sin stock")
+        time.sleep(0.5)
     return resultados
 
-def procesar_alertas(moneda, config, resultados, estado, tipo_cambio_real):
-    if not resultados:
-        send_telegram(
-            f"⚠️ <b>Sin datos: {config['bandera']} {moneda}</b>\n"
-            f"No se pudieron obtener precios. Puede que los slugs hayan cambiado o la API esté caída."
-        )
-        return
-
-    mejor = max(resultados, key=lambda x: x["ratio"])
-    mejor_ratio = mejor["ratio"]
-    umbral = config["umbral"]
-    umbral_bajo = config["umbral_bajo"]
+def procesar_alertas(moneda, config, resultados, estado, tipos_cambio):
+    con_stock = [r for r in resultados if r["stock"] and r["ratio"]]
 
     estado_moneda = estado["monedas"].get(moneda, {
         "ultimo_ratio_alertado": None,
         "sobre_umbral": False,
         "bajo_umbral_bajo": False,
+        "sin_datos_alertado": False,
     })
+
+    if not con_stock:
+        # Solo alertar una vez si no hay datos (no repetir cada 20 min)
+        if not estado_moneda.get("sin_datos_alertado"):
+            send_telegram(
+                f"⚠️ <b>Sin stock: {config['bandera']} {moneda}</b>\n"
+                f"Ninguna tarjeta disponible en este momento."
+            )
+            estado_moneda["sin_datos_alertado"] = True
+        estado["monedas"][moneda] = estado_moneda
+        return
+    else:
+        estado_moneda["sin_datos_alertado"] = False
+
+    mejor = max(con_stock, key=lambda x: x["ratio"])
+    mejor_ratio = mejor["ratio"]
+    umbral = config["umbral"]
+    umbral_bajo = config["umbral_bajo"]
+    tipo_cambio = tipos_cambio.get(moneda)
 
     # Comparativa con tipo de cambio real
     comparativa = ""
-    if tipo_cambio_real:
-        margen = ((mejor_ratio / tipo_cambio_real) - 1) * 100
+    if tipo_cambio:
+        margen = ((mejor_ratio / tipo_cambio) - 1) * 100
         signo = "+" if margen >= 0 else ""
-        comparativa = f"\n💱 Cambio real: {tipo_cambio_real:.2f} {moneda}/€ ({signo}{margen:.1f}% vs mercado)"
+        comparativa = f"\n💱 Cambio real: {tipo_cambio:.2f} {moneda}/€ ({signo}{margen:.1f}% vs mercado)"
 
     # Aviso si cae por debajo del umbral bajo
     if mejor_ratio < umbral_bajo and not estado_moneda.get("bajo_umbral_bajo"):
@@ -319,7 +344,6 @@ def procesar_alertas(moneda, config, resultados, estado, tipo_cambio_real):
     if mejor_ratio >= umbral:
         ultimo = estado_moneda.get("ultimo_ratio_alertado")
         debe_alertar = False
-
         if not estado_moneda.get("sobre_umbral"):
             debe_alertar = True
         elif ultimo is not None and mejor_ratio > ultimo + 0.5:
@@ -330,8 +354,7 @@ def procesar_alertas(moneda, config, resultados, estado, tipo_cambio_real):
                 f"🚨 <b>Alerta {config['bandera']} {moneda}</b>\n"
                 f"Mejor ratio: <b>{mejor_ratio:.2f} {moneda}/€</b>\n"
                 f"Tarjeta: {mejor['valor']} {moneda} por {mejor['precio_eur']:.2f}€"
-                f"{comparativa}\n"
-                f"https://www.eneba.com/es/xbox-xbox-live-gift-card-{mejor['valor']}-{moneda.lower()}-xbox-live-key-turkey"
+                f"{comparativa}"
             )
             estado_moneda["ultimo_ratio_alertado"] = mejor_ratio
             estado_moneda["sobre_umbral"] = True
@@ -342,9 +365,10 @@ def procesar_alertas(moneda, config, resultados, estado, tipo_cambio_real):
     estado["monedas"][moneda] = estado_moneda
 
 def guardar_historial(moneda, resultados, estado, ahora):
-    if not resultados:
+    con_stock = [r for r in resultados if r["stock"] and r["ratio"]]
+    if not con_stock:
         return
-    mejor = max(resultados, key=lambda x: x["ratio"])
+    mejor = max(con_stock, key=lambda x: x["ratio"])
     estado["historial"].append({
         "moneda": moneda,
         "timestamp": ahora.isoformat(),
@@ -352,11 +376,9 @@ def guardar_historial(moneda, resultados, estado, ahora):
         "mejor_valor": mejor["valor"],
         "mejor_precio_eur": round(mejor["precio_eur"], 4),
     })
-    # Limpiar entradas de más de 6 meses
     limite = (ahora - timedelta(days=180)).isoformat()
-    historial_previo = estado["historial"]
+    historial_previo = list(estado["historial"])
     estado["historial"] = [h for h in estado["historial"] if h["timestamp"] >= limite]
-    # Si se eliminaron entradas antiguas, exportar CSV primero
     if len(estado["historial"]) < len(historial_previo):
         exportar_historial_csv(historial_previo, ahora)
 
@@ -371,14 +393,11 @@ def exportar_historial_csv(historial, ahora):
     print(f"Historial exportado: {nombre}")
 
 def debe_enviar_resumen(tipo, estado, ahora):
-    key = f"ultimo_{tipo}"
-    ultimo = estado.get("resumenes", {}).get(key)
+    ultimo = estado.get("resumenes", {}).get(f"ultimo_{tipo}")
     if tipo == "diario":
-        hoy = ahora.strftime("%Y-%m-%d")
-        return ultimo != hoy
+        return ultimo != ahora.strftime("%Y-%m-%d")
     elif tipo == "semanal":
-        semana = f"{ahora.isocalendar()[0]}-W{ahora.isocalendar()[1]}"
-        return ultimo != semana
+        return ultimo != f"{ahora.isocalendar()[0]}-W{ahora.isocalendar()[1]}"
     return False
 
 def marcar_resumen_enviado(tipo, estado, ahora):
@@ -389,39 +408,54 @@ def marcar_resumen_enviado(tipo, estado, ahora):
     elif tipo == "semanal":
         estado["resumenes"]["ultimo_semanal"] = f"{ahora.isocalendar()[0]}-W{ahora.isocalendar()[1]}"
 
-def enviar_resumen_diario(estado, ahora):
+def formatear_bloque_moneda(moneda, config, resultados, tipo_cambio):
+    con_stock = [r for r in resultados if r["stock"] and r["ratio"]]
+    lineas = [f"{config['bandera']} <b>{moneda}</b>"]
+
+    if not con_stock:
+        # Todas sin stock
+        for r in resultados:
+            lineas.append(f"  {r['valor']} {moneda} → ⚫ Sin stock")
+        lineas.append("")
+        return lineas
+
+    mejor = max(con_stock, key=lambda x: x["ratio"])
+
+    for r in resultados:
+        if not r["stock"]:
+            lineas.append(f"  {r['valor']} {moneda} → ⚫ Sin stock")
+        elif r["valor"] == mejor["valor"]:
+            lineas.append(f"  🏆 <b>{r['valor']} {moneda} → {r['ratio']:.2f} {moneda}/€</b>")
+        else:
+            lineas.append(f"  {r['valor']} {moneda} → {r['ratio']:.2f} {moneda}/€")
+
+    lineas.append(f"  (umbral: {config['umbral']})")
+
+    if tipo_cambio:
+        margen = ((mejor["ratio"] / tipo_cambio) - 1) * 100
+        signo = "+" if margen >= 0 else ""
+        lineas.append(f"  💱 Cambio real: {tipo_cambio:.2f} {moneda}/€ ({signo}{margen:.1f}%)")
+
+    lineas.append("")
+    return lineas
+
+def enviar_resumen_diario(estado, ahora, tipos_cambio):
     lineas = [f"📊 <b>Resumen diario Eneba — {ahora.strftime('%d/%m/%Y')}</b>\n"]
     for moneda, config in MONEDAS.items():
-        print(f"  Obteniendo datos {moneda} para resumen...")
+        print(f"  Obteniendo {moneda}...")
         resultados = get_ratios_moneda(config)
-        tipo_cambio = get_tipo_cambio_real(moneda)
-        if not resultados:
-            lineas.append(f"{config['bandera']} <b>{moneda}</b>: ⚠️ Sin datos\n")
-            continue
-        mejor = max(resultados, key=lambda x: x["ratio"])
-        lineas.append(f"{config['bandera']} <b>{moneda}</b>")
-        for r in resultados:
-            lineas.append(f"  {r['valor']} {moneda} → {r['ratio']:.2f} {moneda}/€")
-        lineas.append(f"  🏆 Mejor: <b>{mejor['ratio']:.2f} {moneda}/€</b> (umbral: {config['umbral']})")
-        if tipo_cambio:
-            margen = ((mejor['ratio'] / tipo_cambio) - 1) * 100
-            signo = "+" if margen >= 0 else ""
-            lineas.append(f"  💱 Cambio real: {tipo_cambio:.2f} {moneda}/€ ({signo}{margen:.1f}%)")
-        lineas.append("")
+        tipo_cambio = tipos_cambio.get(moneda)
+        lineas += formatear_bloque_moneda(moneda, config, resultados, tipo_cambio)
     send_telegram("\n".join(lineas))
     marcar_resumen_enviado("diario", estado, ahora)
 
 def enviar_resumen_semanal(estado, ahora):
     lineas = [f"📈 <b>Resumen semanal Eneba — semana {ahora.isocalendar()[1]}</b>\n"]
+    dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
     for moneda in MONEDAS:
         config = MONEDAS[moneda]
-        historial_moneda = [h for h in estado["historial"] if h["moneda"] == moneda]
-        if not historial_moneda:
-            lineas.append(f"{config['bandera']} <b>{moneda}</b>: sin datos esta semana\n")
-            continue
-        # Solo última semana
         una_semana = (ahora - timedelta(days=7)).isoformat()
-        semana = [h for h in historial_moneda if h["timestamp"] >= una_semana]
+        semana = [h for h in estado["historial"] if h["moneda"] == moneda and h["timestamp"] >= una_semana]
         if not semana:
             lineas.append(f"{config['bandera']} <b>{moneda}</b>: sin datos esta semana\n")
             continue
@@ -429,7 +463,6 @@ def enviar_resumen_semanal(estado, ahora):
         peor = min(semana, key=lambda x: x["mejor_ratio"])
         mejor_dt = datetime.fromisoformat(mejor["timestamp"])
         peor_dt = datetime.fromisoformat(peor["timestamp"])
-        dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
         lineas.append(f"{config['bandera']} <b>{moneda}</b>")
         lineas.append(f"  🏆 Mejor: {mejor['mejor_ratio']:.2f} {moneda}/€")
         lineas.append(f"     {dias[mejor_dt.weekday()]} {mejor_dt.strftime('%d/%m')} a las {mejor_dt.strftime('%H:%M')} ({mejor['mejor_valor']} {moneda} por {mejor['mejor_precio_eur']:.2f}€)")
@@ -440,27 +473,28 @@ def enviar_resumen_semanal(estado, ahora):
 
 def main():
     ahora = datetime.now(timezone.utc)
-    hora_canarias = ahora.hour - 1  # Canarias es UTC-1 (en verano UTC+1, ajustar si es necesario)
+    hora_canarias = ahora.hour - 1
     es_lunes = ahora.weekday() == 0
 
     estado = cargar_estado()
 
-    # Resumen semanal: lunes después de las 9am si no se ha enviado esta semana
+    # Obtener todos los tipos de cambio de una sola vez
+    tipos_cambio = get_tipo_cambio_real(list(MONEDAS.keys()))
+
+    # Resumen semanal: lunes después de las 9am
     if es_lunes and hora_canarias >= 9 and debe_enviar_resumen("semanal", estado, ahora):
         print("Enviando resumen semanal...")
         enviar_resumen_semanal(estado, ahora)
 
-    # Resumen diario: después de las 9am si no se ha enviado hoy
+    # Resumen diario: después de las 9am
     if hora_canarias >= 9 and debe_enviar_resumen("diario", estado, ahora):
         print("Enviando resumen diario...")
-        enviar_resumen_diario(estado, ahora)
+        enviar_resumen_diario(estado, ahora, tipos_cambio)
     else:
-        # Ejecución normal: comprobar precios y alertar
         for moneda, config in MONEDAS.items():
             print(f"\nComprobando {moneda}...")
             resultados = get_ratios_moneda(config)
-            tipo_cambio = get_tipo_cambio_real(moneda)
-            procesar_alertas(moneda, config, resultados, estado, tipo_cambio)
+            procesar_alertas(moneda, config, resultados, estado, tipos_cambio)
             guardar_historial(moneda, resultados, estado, ahora)
 
     guardar_estado(estado)
