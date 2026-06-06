@@ -3,6 +3,12 @@ import re
 import requests
 from playwright.sync_api import sync_playwright
 
+print("Imports OK")
+print(f"Umbral: {os.environ['PRICE_THRESHOLD']}")
+
+
+
+
 URL = "https://www.eneba.com/es/xbox-xbox-live-gift-card-300-try-xbox-live-key-turkey"
 THRESHOLD = float(os.environ["PRICE_THRESHOLD"])
 TOKEN = os.environ["TELEGRAM_TOKEN"]
