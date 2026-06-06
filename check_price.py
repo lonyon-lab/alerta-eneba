@@ -12,10 +12,19 @@ def get_ratios():
         context = browser.new_context(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
             viewport={"width": 1280, "height": 800},
-            locale="es-ES"
+            locale="es-ES",
+            extra_http_headers={
+                "Accept-Language": "es-ES,es;q=0.9",
+                "X-Forwarded-For": "212.166.0.1"
+            }
         )
         page = context.new_page()
         page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+
+        # Primero ponemos la cookie de moneda EUR
+        page.goto("https://www.eneba.com/es/", wait_until="networkidle", timeout=60000)
+        page.wait_for_timeout(2000)
+
         page.goto(URL, wait_until="networkidle", timeout=60000)
         page.wait_for_timeout(6000)
         content = page.content()
@@ -25,8 +34,7 @@ def get_ratios():
     if idx > 0:
         print("FRAGMENTO:", content[idx-50:idx+150])
     else:
-        print("Sigue sin encontrar TRY por")
-        print("MUESTRA HTML:", content[1000:2000])
+        print("No encontrado")
 
 if __name__ == "__main__":
     get_ratios()
