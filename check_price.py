@@ -187,7 +187,7 @@ def get_tipo_cambio_real(monedas):
     """Obtiene todos los tipos de cambio en una sola petición"""
     try:
         # Filtrar SAR porque frankfurter no lo soporta
-        monedas_api = [m for m in monedas if m != "SAR"]
+        monedas_api = [m for m in monedas if m != "SAR"] + ["USD"]
         simbolos = ",".join(monedas_api)
         r = requests.get(
             f"https://api.frankfurter.app/latest?from=EUR&to={simbolos}",
