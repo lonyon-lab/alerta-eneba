@@ -33,8 +33,7 @@ def get_ratios():
         content = page.content()
         browser.close()
 
-    for m in re.finditer(r'.{0,30}TRY por.{0,60}', content):
-        print(">>>", m.group())
+  
 
     matches = re.findall(r'([\d.]+)\s*TRY por\s*<span[^>]*>1(?:&nbsp;|\s*)US\$</span>', content)
     ratios = [float(m) for m in matches]
