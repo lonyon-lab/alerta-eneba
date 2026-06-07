@@ -191,12 +191,11 @@ def get_tipo_cambio_real(monedas):
         if r.status_code == 200:
             rates = r.json().get("rates", {})
             return {m: rates[m] for m in monedas if m in rates}
-    except:
+    except Exception:
         pass
     return {}
 
 def get_price(slug, estado):
-    # Si ya se avisó del SHA inválido, no seguir consultando
     if estado.get("sha_error_alertado"):
         return None, None
 
@@ -226,11 +225,17 @@ def get_price(slug, estado):
             timeout=10
         )
         if r.status_code != 200:
-            print(f"❌ SHA inválido o API cambiada (status {r.status_code})")
+            print(f"❌ Error de red o API caída (status {r.status_code})")
+            return None, None
+
+        data = r.json()
+
+        if "errors" in data:
+            print(f"❌ Error GraphQL (posible SHA inválido): {data['errors']}")
             if not estado.get("sha_error_alertado"):
                 send_telegram(
-                    "⚠️ <b>SHA de Eneba ha cambiado</b>\n"
-                    "La API no responde correctamente.\n"
+                    "⚠️ <b>SHA de Eneba ha cambiado o es inválido</b>\n"
+                    "La API ha respondido con errores.\n"
                     "1. Abre Eneba en el navegador\n"
                     "2. F12 → Network → filtra 'graphql'\n"
                     "3. Abre petición POST → Payload → sha256Hash\n"
@@ -238,11 +243,8 @@ def get_price(slug, estado):
                 )
                 estado["sha_error_alertado"] = True
             return None, False
-        data = r.json()
-        if "errors" in data:
-            print(f"❌ Error GraphQL: {data['errors']}")
-            return None, False
-        # Si llega aquí, el SHA volvió a funcionar
+
+        # SHA funciona correctamente
         estado["sha_error_alertado"] = False
         edges = data["data"]["productNoCache"]["auctions"]["edges"]
         prices_con_stock = [
@@ -530,6 +532,7 @@ def main():
 
     tipos_cambio = get_tipo_cambio_real(list(MONEDAS.keys()))
 
+    # Resúmenes (independientes del flujo normal)
     if es_lunes and hora_utc >= 9 and debe_enviar_resumen("semanal", estado, ahora):
         print("Enviando resumen semanal...")
         enviar_resumen_semanal(estado, ahora)
@@ -537,12 +540,13 @@ def main():
     if hora_utc >= 9 and debe_enviar_resumen("diario", estado, ahora):
         print("Enviando resumen diario...")
         enviar_resumen_diario(estado, ahora, tipos_cambio)
-    else:
-        for moneda, config in MONEDAS.items():
-            print(f"\nComprobando {moneda}...")
-            resultados = get_ratios_moneda(config, estado, ahora)
-            procesar_alertas(moneda, config, resultados, estado, tipos_cambio)
-            guardar_historial(moneda, resultados, estado, ahora)
+
+    # Comprobación normal (se ejecuta siempre)
+    for moneda, config in MONEDAS.items():
+        print(f"\nComprobando {moneda}...")
+        resultados = get_ratios_moneda(config, estado, ahora)
+        procesar_alertas(moneda, config, resultados, estado, tipos_cambio)
+        guardar_historial(moneda, resultados, estado, ahora)
 
     guardar_estado(estado)
 
