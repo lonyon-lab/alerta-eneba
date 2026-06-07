@@ -4,15 +4,9 @@
 # ╚══════════════════════════════════════════════════════════════════════════════╝
 
 # ─── SHA (ACTUALIZAR SI LA API FALLA) ────────────────────────────────────────
-# Si recibes aviso de SHA inválido:
-# 1. Abre Eneba en el navegador
-# 2. F12 → Network → filtra "graphql" → abre petición POST → Payload
-# 3. Copia el valor de sha256Hash y pégalo aquí
 SHA = "c3aaf0194bab3a8481512069d9bbc707037714c0a60f603497bc820f00a91c11_50e5e0d9351bb05ab629b0eda9b116ae4d96fbb6861836383bc404f1ab5e3680094635224c07d364fff371b7517712ebd33ce0f05504f2fa7e9d66e321168e02"
 
 # ─── UMBRALES (EDITAR AQUÍ) ───────────────────────────────────────────────────
-# umbral:      avisa cuando el ratio SUBE de este valor (precio barato)
-# umbral_bajo: avisa cuando el ratio BAJA de este valor (precio caro, algo raro)
 UMBRALES = {
     "TRY": {"umbral": 52.7,   "umbral_bajo": 48},
     "BRL": {"umbral": 6.8,  "umbral_bajo": 5.5},
@@ -25,10 +19,6 @@ UMBRALES = {
 }
 
 # ─── CONFIGURACIÓN DE MONEDAS ─────────────────────────────────────────────────
-# Para añadir una moneda nueva:
-# 1. Añade su umbral en UMBRALES arriba
-# 2. Añade su bloque aquí con slugs y valores
-# Las tarjetas sin stock se detectan automáticamente y se comprueban cada 12h
 MONEDAS = {
     "TRY": {
         "nombre": "Lira turca",
@@ -140,12 +130,22 @@ import json
 import time
 import csv
 import io
+import base64
 import requests
 from datetime import datetime, timezone, timedelta
 
 # ─── TELEGRAM ─────────────────────────────────────────────────────────────────
 TOKEN = os.environ["TELEGRAM_TOKEN"]
 CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
+
+# ─── GITHUB API ───────────────────────────────────────────────────────────────
+GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
+GITHUB_REPO = "lonyon-lab/alerta-eneba"
+GITHUB_FILE = "estado.json"
+GITHUB_HEADERS = {
+    "Authorization": f"token {GITHUB_TOKEN}",
+    "Accept": "application/vnd.github+json"
+}
 
 # ─── HEADERS ENEBA ────────────────────────────────────────────────────────────
 HEADERS = {
@@ -157,8 +157,7 @@ HEADERS = {
     "Referer": "https://www.eneba.com/",
 }
 
-ESTADO_FILE = "estado.json"
-HORAS_RECHECK_SIN_STOCK = 12  # cada cuántas horas se comprueban tarjetas sin stock
+HORAS_RECHECK_SIN_STOCK = 12
 
 # ─── FUNCIONES ────────────────────────────────────────────────────────────────
 
@@ -249,31 +248,59 @@ def get_price(slug):
         if prices_con_stock:
             return min(prices_con_stock), True
         elif hay_producto:
-            return None, False  # Existe pero sin stock
+            return None, False
         else:
-            return None, None   # Slug incorrecto o no existe
+            return None, None
     except Exception as e:
         print(f"Error de red en {slug}: {e}")
         return None, None
 
 def cargar_estado():
-    if os.path.exists(ESTADO_FILE):
-        with open(ESTADO_FILE, "r") as f:
-            return json.load(f)
+    try:
+        r = requests.get(
+            f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_FILE}",
+            headers=GITHUB_HEADERS,
+            timeout=10
+        )
+        if r.status_code == 200:
+            contenido = base64.b64decode(r.json()["content"]).decode("utf-8")
+            return json.loads(contenido)
+    except Exception as e:
+        print(f"Error cargando estado: {e}")
     return {"monedas": {}, "historial": [], "resumenes": {}, "stock": {}}
 
 def guardar_estado(estado):
-    with open(ESTADO_FILE, "w") as f:
-        json.dump(estado, f, indent=2)
+    try:
+        contenido = json.dumps(estado, indent=2).encode("utf-8")
+        contenido_b64 = base64.b64encode(contenido).decode("utf-8")
+        r = requests.get(
+            f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_FILE}",
+            headers=GITHUB_HEADERS,
+            timeout=10
+        )
+        sha = r.json().get("sha") if r.status_code == 200 else None
+        body = {
+            "message": "Actualizar estado",
+            "content": contenido_b64,
+        }
+        if sha:
+            body["sha"] = sha
+        requests.put(
+            f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_FILE}",
+            headers=GITHUB_HEADERS,
+            json=body,
+            timeout=10
+        )
+        print("Estado guardado en GitHub ✅")
+    except Exception as e:
+        print(f"Error guardando estado: {e}")
 
 def debe_comprobar_slug(slug, estado, ahora):
-    """Decide si hay que consultar un slug según su estado de stock"""
     info = estado.get("stock", {}).get(slug)
     if info is None:
-        return True  # nunca comprobado, siempre consultar
+        return True
     if info.get("tiene_stock"):
-        return True  # tiene stock, consultar siempre
-    # Sin stock: solo consultar cada HORAS_RECHECK_SIN_STOCK horas
+        return True
     ultima = info.get("ultima_comprobacion")
     if not ultima:
         return True
@@ -295,7 +322,6 @@ def get_ratios_moneda(config, estado, ahora):
         valor = item["valor"]
 
         if not debe_comprobar_slug(slug, estado, ahora):
-            # Sin stock y no toca recomprobar aún
             print(f"  {valor} = ⚫ Sin stock (sin recomprobar)")
             resultados.append({"valor": valor, "precio_eur": None, "ratio": None, "stock": False})
             continue
@@ -439,32 +465,21 @@ def formatear_bloque_moneda(moneda, config, resultados, tipo_cambio):
 
     for r in resultados:
         if not r["stock"]:
-            lineas.append(
-                f"  {r['valor']} {moneda} → ⚫ Sin stock"
-            )
-
+            lineas.append(f"  {r['valor']} {moneda} → ⚫ Sin stock")
         elif r["valor"] == mejor["valor"]:
-            lineas.append(
-                f"  🏆 <b>{r['valor']} {moneda} → {r['precio_eur']:.2f}€ → {r['ratio']:.2f} {moneda}/€</b>"
-            )
-
+            lineas.append(f"  🏆 <b>{r['valor']} {moneda} → {r['precio_eur']:.2f}€ → {r['ratio']:.2f} {moneda}/€</b>")
         else:
-            lineas.append(
-                f"  {r['valor']} {moneda} → {r['precio_eur']:.2f}€ → {r['ratio']:.2f} {moneda}/€"
-            )
+            lineas.append(f"  {r['valor']} {moneda} → {r['precio_eur']:.2f}€ → {r['ratio']:.2f} {moneda}/€")
 
     lineas.append(f"  (umbral: {config['umbral']})")
 
     if tipo_cambio:
         margen = ((mejor['ratio'] / tipo_cambio) - 1) * 100
         signo = "+" if margen >= 0 else ""
-        lineas.append(
-            f"  💱 Cambio real: {tipo_cambio:.2f} {moneda}/€ ({signo}{margen:.1f}%)"
-        )
+        lineas.append(f"  💱 Cambio real: {tipo_cambio:.2f} {moneda}/€ ({signo}{margen:.1f}%)")
 
     lineas.append("")
     return lineas
-
 
 def enviar_resumen_diario(estado, ahora, tipos_cambio):
     lineas = [f"📊 <b>Resumen diario Eneba — {ahora.strftime('%d/%m/%Y')}</b>\n"]
@@ -500,20 +515,17 @@ def enviar_resumen_semanal(estado, ahora):
 
 def main():
     ahora = datetime.now(timezone.utc)
-    hora_utc = ahora.hour  # UTC = hora Canarias en invierno, Canarias+1 en verano
+    hora_utc = ahora.hour
     es_lunes = ahora.weekday() == 0
 
     estado = cargar_estado()
 
-    # Obtener todos los tipos de cambio de una sola vez
     tipos_cambio = get_tipo_cambio_real(list(MONEDAS.keys()))
 
-    # Resumen semanal: lunes después de las 9 UTC
     if es_lunes and hora_utc >= 9 and debe_enviar_resumen("semanal", estado, ahora):
         print("Enviando resumen semanal...")
         enviar_resumen_semanal(estado, ahora)
 
-    # Resumen diario: después de las 9 UTC
     if hora_utc >= 9 and debe_enviar_resumen("diario", estado, ahora):
         print("Enviando resumen diario...")
         enviar_resumen_diario(estado, ahora, tipos_cambio)
