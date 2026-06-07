@@ -195,7 +195,11 @@ def get_tipo_cambio_real(monedas):
         pass
     return {}
 
-def get_price(slug):
+def get_price(slug, estado):
+    # Si ya se avisó del SHA inválido, no seguir consultando
+    if estado.get("sha_error_alertado"):
+        return None, None
+
     body = {
         "operationName": "ProductNoCache",
         "variables": {
@@ -223,19 +227,23 @@ def get_price(slug):
         )
         if r.status_code != 200:
             print(f"❌ SHA inválido o API cambiada (status {r.status_code})")
-            send_telegram(
-                "⚠️ <b>SHA de Eneba ha cambiado</b>\n"
-                "La API no responde correctamente.\n"
-                "1. Abre Eneba en el navegador\n"
-                "2. F12 → Network → filtra 'graphql'\n"
-                "3. Abre petición POST → Payload → sha256Hash\n"
-                "4. Actualiza la variable SHA en check_price.py"
-            )
+            if not estado.get("sha_error_alertado"):
+                send_telegram(
+                    "⚠️ <b>SHA de Eneba ha cambiado</b>\n"
+                    "La API no responde correctamente.\n"
+                    "1. Abre Eneba en el navegador\n"
+                    "2. F12 → Network → filtra 'graphql'\n"
+                    "3. Abre petición POST → Payload → sha256Hash\n"
+                    "4. Actualiza la variable SHA en check_price.py"
+                )
+                estado["sha_error_alertado"] = True
             return None, False
         data = r.json()
         if "errors" in data:
             print(f"❌ Error GraphQL: {data['errors']}")
             return None, False
+        # Si llega aquí, el SHA volvió a funcionar
+        estado["sha_error_alertado"] = False
         edges = data["data"]["productNoCache"]["auctions"]["edges"]
         prices_con_stock = [
             e["node"]["price"]["amount"]
@@ -267,7 +275,7 @@ def cargar_estado():
             return json.loads(contenido)
     except Exception as e:
         print(f"Error cargando estado: {e}")
-    return {"monedas": {}, "historial": [], "resumenes": {}, "stock": {}}
+    return {"monedas": {}, "historial": [], "resumenes": {}, "stock": {}, "sha_error_alertado": False}
 
 def guardar_estado(estado):
     try:
@@ -326,7 +334,7 @@ def get_ratios_moneda(config, estado, ahora):
             resultados.append({"valor": valor, "precio_eur": None, "ratio": None, "stock": False})
             continue
 
-        price_cents, tiene_stock = get_price(slug)
+        price_cents, tiene_stock = get_price(slug, estado)
         actualizar_stock_slug(slug, bool(tiene_stock), ahora, estado)
 
         if price_cents and tiene_stock:
