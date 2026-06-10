@@ -47,6 +47,12 @@
       "sobre_umbral": false,
       "bajo_umbral_bajo": false,
       "sin_datos_alertado": true
+    },
+    "JPY": {
+      "ultimo_ratio_alertado": null,
+      "sobre_umbral": false,
+      "bajo_umbral_bajo": false,
+      "sin_datos_alertado": true
     }
   },
   "historial": [
