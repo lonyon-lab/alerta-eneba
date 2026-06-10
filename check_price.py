@@ -9,13 +9,14 @@ SHA = "c3aaf0194bab3a8481512069d9bbc707037714c0a60f603497bc820f00a91c11_50e5e0d9
 # ─── UMBRALES (EDITAR AQUÍ) ───────────────────────────────────────────────────
 UMBRALES = {
     "TRY": {"umbral": 52.7,   "umbral_bajo": 48},
-    "BRL": {"umbral": 6.8,  "umbral_bajo": 5.5},
-    "CLP": {"umbral": 42,   "umbral_bajo": 33},
-    "COP": {"umbral": 4200, "umbral_bajo": 3300},
-    "ZAR": {"umbral": 20.5, "umbral_bajo": 16},
-    "SAR": {"umbral": 4.45, "umbral_bajo": 3.2},
-    "TWD": {"umbral": 38,   "umbral_bajo": 30},
-    "HKD": {"umbral": 9.2,  "umbral_bajo": 7.2},
+    "BRL": {"umbral": 6.8,    "umbral_bajo": 5.5},
+    "CLP": {"umbral": 42,     "umbral_bajo": 33},
+    "COP": {"umbral": 4200,   "umbral_bajo": 3300},
+    "ZAR": {"umbral": 20.5,   "umbral_bajo": 16},
+    "SAR": {"umbral": 4.45,   "umbral_bajo": 3.2},
+    "TWD": {"umbral": 38,     "umbral_bajo": 30},
+    "HKD": {"umbral": 9.2,    "umbral_bajo": 7.2},
+    "JPY": {"umbral": 167,    "umbral_bajo": 155},
 }
 
 # ─── CONFIGURACIÓN DE MONEDAS ─────────────────────────────────────────────────
@@ -122,6 +123,21 @@ MONEDAS = {
         "umbral": UMBRALES["HKD"]["umbral"],
         "umbral_bajo": UMBRALES["HKD"]["umbral_bajo"],
     },
+    "JPY": {
+        "nombre": "Yen japonés",
+        "bandera": "🇯🇵",
+        "slugs": [
+            {"slug": "xbox-xbox-live-gift-card-1000-jpy-xbox-live-key-japan",  "valor": 1000},
+            {"slug": "xbox-xbox-live-gift-card-1500-jpy-xbox-live-key-japan",  "valor": 1500},
+            {"slug": "xbox-xbox-live-gift-card-2000-jpy-xbox-live-key-japan",  "valor": 2000},
+            {"slug": "xbox-xbox-live-gift-card-2500-jpy-xbox-live-key-japan",  "valor": 2500},
+            {"slug": "xbox-xbox-live-gift-card-3000-jpy-xbox-live-key-japan",  "valor": 3000},
+            {"slug": "xbox-xbox-live-gift-card-5000-jpy-xbox-live-key-japan",  "valor": 5000},
+            {"slug": "xbox-xbox-live-gift-card-10000-jpy-xbox-live-key-japan", "valor": 10000},
+        ],
+        "umbral": UMBRALES["JPY"]["umbral"],
+        "umbral_bajo": UMBRALES["JPY"]["umbral_bajo"],
+    },
 }
 
 # ─── IMPORTS ──────────────────────────────────────────────────────────────────
@@ -195,9 +211,11 @@ def get_tipo_cambio_real(monedas):
         pass
     return {}
 
+# Retorna (precio, tiene_stock, api_ok)
+# api_ok=False significa que hubo error de red/API, no tocar estado de stock
 def get_price(slug, estado):
     if estado.get("sha_error_alertado"):
-        return None, None
+        return None, None, False
 
     body = {
         "operationName": "ProductNoCache",
@@ -226,7 +244,7 @@ def get_price(slug, estado):
         )
         if r.status_code != 200:
             print(f"❌ Error de red o API caída (status {r.status_code})")
-            return None, None
+            return None, None, False  # api_ok=False, no tocar estado
 
         data = r.json()
 
@@ -242,9 +260,8 @@ def get_price(slug, estado):
                     "4. Actualiza la variable SHA en check_price.py"
                 )
                 estado["sha_error_alertado"] = True
-            return None, False
+            return None, False, False  # api_ok=False, no tocar estado
 
-        # SHA funciona correctamente
         estado["sha_error_alertado"] = False
         edges = data["data"]["productNoCache"]["auctions"]["edges"]
         prices_con_stock = [
@@ -256,14 +273,14 @@ def get_price(slug, estado):
         ]
         hay_producto = len(edges) > 0
         if prices_con_stock:
-            return min(prices_con_stock), True
+            return min(prices_con_stock), True, True
         elif hay_producto:
-            return None, False
+            return None, False, True  # existe pero sin stock, api_ok=True
         else:
-            return None, None
+            return None, None, True   # slug no existe, api_ok=True
     except Exception as e:
         print(f"Error de red en {slug}: {e}")
-        return None, None
+        return None, None, False  # api_ok=False, no tocar estado
 
 def cargar_estado():
     try:
@@ -336,7 +353,14 @@ def get_ratios_moneda(config, estado, ahora):
             resultados.append({"valor": valor, "precio_eur": None, "ratio": None, "stock": False})
             continue
 
-        price_cents, tiene_stock = get_price(slug, estado)
+        price_cents, tiene_stock, api_ok = get_price(slug, estado)
+
+        if not api_ok:
+            # API falló, no tocar el estado de stock, usar valor anterior
+            print(f"  {valor} = ⚠️ Error API (estado sin cambios)")
+            resultados.append({"valor": valor, "precio_eur": None, "ratio": None, "stock": False})
+            continue
+
         actualizar_stock_slug(slug, bool(tiene_stock), ahora, estado)
 
         if price_cents and tiene_stock:
