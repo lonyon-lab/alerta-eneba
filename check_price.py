@@ -78,9 +78,15 @@ MONEDAS = {
         "slugs": [
             {"slug": "xbox-xbox-live-gift-card-50-zar-xbox-live-key-south-africa",  "valor": 50},
             {"slug": "xbox-xbox-live-gift-card-100-zar-xbox-live-key-south-africa", "valor": 100},
+            {"slug": "xbox-xbox-live-gift-card-120-zar-xbox-live-key-south-africa", "valor": 120},
             {"slug": "xbox-xbox-live-gift-card-150-zar-xbox-live-key-south-africa", "valor": 150},
             {"slug": "xbox-xbox-live-gift-card-200-zar-xbox-live-key-south-africa", "valor": 200},
+            {"slug": "xbox-xbox-live-gift-card-250-zar-xbox-live-key-south-africa", "valor": 250},
+            {"slug": "xbox-xbox-live-gift-card-300-zar-xbox-live-key-south-africa", "valor": 300},
+            {"slug": "xbox-xbox-live-gift-card-350-zar-xbox-live-key-south-africa", "valor": 350},
+            {"slug": "xbox-xbox-live-gift-card-450-zar-xbox-live-key-south-africa", "valor": 450},
             {"slug": "xbox-xbox-live-gift-card-500-zar-xbox-live-key-south-africa", "valor": 500},
+            {"slug": "xbox-xbox-live-gift-card-550-zar-xbox-live-key-south-africa", "valor": 550},
             {"slug": "xbox-xbox-live-gift-card-600-zar-xbox-live-key-south-africa", "valor": 600},
         ],
         "umbral": UMBRALES["ZAR"]["umbral"],
@@ -270,7 +276,11 @@ def get_price(slug, estado):
             return None, "sha_error"
 
         estado["sha_error_alertado"] = False
-        edges = data["data"]["productNoCache"]["auctions"]["edges"]
+        try:
+            edges = data["data"]["productNoCache"]["auctions"]["edges"]
+        except (KeyError, TypeError):
+            print(f"Respuesta inesperada de Eneba para {slug}: {str(data)[:200]}")
+            return None, "sin_stock"
         prices_con_stock = [
             e["node"]["price"]["amount"]
             for e in edges
