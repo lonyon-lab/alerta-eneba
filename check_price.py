@@ -28,7 +28,6 @@ MONEDAS = {
             {"slug": "xbox-xbox-live-gift-card-25-try-xbox-live-key-turkey",  "valor": 25},
             {"slug": "xbox-xbox-live-gift-card-50-try-xbox-live-key-turkey",  "valor": 50},
             {"slug": "xbox-xbox-live-gift-card-100-try-xbox-live-key-turkey", "valor": 100},
-            {"slug": "xbox-xbox-live-gift-card-250-try-xbox-live-key-turkey", "valor": 250},
             {"slug": "xbox-xbox-live-gift-card-300-try-xbox-live-key-turkey", "valor": 300},
         ],
         "umbral": UMBRALES["TRY"]["umbral"],
@@ -175,7 +174,11 @@ HEADERS = {
 
 HORAS_RECHECK_SIN_STOCK = 12
 
-# ─── FUNCIONES ────────────────────────────────────────────────────────────────
+# Estados posibles de una tarjeta:
+# "ok"         → API respondió, hay stock
+# "sin_stock"  → API respondió, no hay stock
+# "api_error"  → API falló (red, timeout)
+# "sha_error"  → API respondió pero con errores GraphQL
 
 def send_telegram(msg):
     try:
@@ -211,11 +214,13 @@ def get_tipo_cambio_real(monedas):
         pass
     return {}
 
-# Retorna (precio, tiene_stock, api_ok)
-# api_ok=False significa que hubo error de red/API, no tocar estado de stock
 def get_price(slug, estado):
+    """
+    Retorna (precio_cents, estado_slug) donde estado_slug es uno de:
+    "ok", "sin_stock", "api_error", "sha_error"
+    """
     if estado.get("sha_error_alertado"):
-        return None, None, False
+        return None, "sha_error"
 
     body = {
         "operationName": "ProductNoCache",
@@ -244,7 +249,7 @@ def get_price(slug, estado):
         )
         if r.status_code != 200:
             print(f"❌ Error de red o API caída (status {r.status_code})")
-            return None, None, False  # api_ok=False, no tocar estado
+            return None, "api_error"
 
         data = r.json()
 
@@ -260,7 +265,7 @@ def get_price(slug, estado):
                     "4. Actualiza la variable SHA en check_price.py"
                 )
                 estado["sha_error_alertado"] = True
-            return None, False, False  # api_ok=False, no tocar estado
+            return None, "sha_error"
 
         estado["sha_error_alertado"] = False
         edges = data["data"]["productNoCache"]["auctions"]["edges"]
@@ -271,16 +276,14 @@ def get_price(slug, estado):
             and e["node"]["isCurrentlyAvailable"]
             and e["node"]["price"]["amount"] > 0
         ]
-        hay_producto = len(edges) > 0
         if prices_con_stock:
-            return min(prices_con_stock), True, True
-        elif hay_producto:
-            return None, False, True  # existe pero sin stock, api_ok=True
+            return min(prices_con_stock), "ok"
         else:
-            return None, None, True   # slug no existe, api_ok=True
+            return None, "sin_stock"
+
     except Exception as e:
         print(f"Error de red en {slug}: {e}")
-        return None, None, False  # api_ok=False, no tocar estado
+        return None, "api_error"
 
 def cargar_estado():
     try:
@@ -350,51 +353,72 @@ def get_ratios_moneda(config, estado, ahora):
 
         if not debe_comprobar_slug(slug, estado, ahora):
             print(f"  {valor} = ⚫ Sin stock (sin recomprobar)")
-            resultados.append({"valor": valor, "precio_eur": None, "ratio": None, "stock": False})
+            resultados.append({"valor": valor, "precio_eur": None, "ratio": None, "stock": "sin_stock"})
             continue
 
-        price_cents, tiene_stock, api_ok = get_price(slug, estado)
+        price_cents, estado_slug = get_price(slug, estado)
 
-        if not api_ok:
-            # API falló, no tocar el estado de stock, usar valor anterior
+        if estado_slug == "api_error":
             print(f"  {valor} = ⚠️ Error API (estado sin cambios)")
-            resultados.append({"valor": valor, "precio_eur": None, "ratio": None, "stock": False})
+            resultados.append({"valor": valor, "precio_eur": None, "ratio": None, "stock": "api_error"})
             continue
 
-        actualizar_stock_slug(slug, bool(tiene_stock), ahora, estado)
+        if estado_slug == "sha_error":
+            print(f"  {valor} = ⚠️ SHA inválido")
+            resultados.append({"valor": valor, "precio_eur": None, "ratio": None, "stock": "sha_error"})
+            continue
 
-        if price_cents and tiene_stock:
+        if estado_slug == "ok":
+            actualizar_stock_slug(slug, True, ahora, estado)
             price_eur = price_cents / 100
             ratio = valor / price_eur
-            resultados.append({"valor": valor, "precio_eur": price_eur, "ratio": ratio, "stock": True})
+            resultados.append({"valor": valor, "precio_eur": price_eur, "ratio": ratio, "stock": "ok"})
             print(f"  {valor} = {price_eur:.2f}€ → {ratio:.2f}/€")
-        else:
-            resultados.append({"valor": valor, "precio_eur": None, "ratio": None, "stock": False})
+        else:  # sin_stock confirmado
+            actualizar_stock_slug(slug, False, ahora, estado)
+            resultados.append({"valor": valor, "precio_eur": None, "ratio": None, "stock": "sin_stock"})
             print(f"  {valor} = ⚫ Sin stock")
+
         time.sleep(0.5)
     return resultados
 
 def procesar_alertas(moneda, config, resultados, estado, tipos_cambio):
-    con_stock = [r for r in resultados if r["stock"] and r["ratio"]]
+    con_stock = [r for r in resultados if r["stock"] == "ok" and r["ratio"]]
+    hay_api_error = any(r["stock"] in ("api_error", "sha_error") for r in resultados)
+    sin_stock_confirmado = all(r["stock"] == "sin_stock" for r in resultados)
 
     estado_moneda = estado["monedas"].get(moneda, {
         "ultimo_ratio_alertado": None,
         "sobre_umbral": False,
         "bajo_umbral_bajo": False,
         "sin_datos_alertado": False,
+        "api_error_alertado": False,
     })
 
     if not con_stock:
-        if not estado_moneda.get("sin_datos_alertado"):
-            send_telegram(
-                f"⚠️ <b>Sin stock: {config['bandera']} {moneda}</b>\n"
-                f"Ninguna tarjeta disponible en este momento."
-            )
-            estado_moneda["sin_datos_alertado"] = True
+        if hay_api_error:
+            # API falló, no sabemos el estado real
+            if not estado_moneda.get("api_error_alertado"):
+                send_telegram(
+                    f"⚠️ <b>API no disponible: {config['bandera']} {moneda}</b>\n"
+                    f"No se pudo obtener el precio. Se reintentará en la próxima ejecución."
+                )
+                estado_moneda["api_error_alertado"] = True
+        elif sin_stock_confirmado:
+            # Sin stock confirmado por la API
+            estado_moneda["api_error_alertado"] = False
+            if not estado_moneda.get("sin_datos_alertado"):
+                send_telegram(
+                    f"⚠️ <b>Sin stock: {config['bandera']} {moneda}</b>\n"
+                    f"Ninguna tarjeta disponible en este momento."
+                )
+                estado_moneda["sin_datos_alertado"] = True
         estado["monedas"][moneda] = estado_moneda
         return
-    else:
-        estado_moneda["sin_datos_alertado"] = False
+
+    # Hay stock, resetear flags de error
+    estado_moneda["sin_datos_alertado"] = False
+    estado_moneda["api_error_alertado"] = False
 
     mejor = max(con_stock, key=lambda x: x["ratio"])
     mejor_ratio = mejor["ratio"]
@@ -442,7 +466,7 @@ def procesar_alertas(moneda, config, resultados, estado, tipos_cambio):
     estado["monedas"][moneda] = estado_moneda
 
 def guardar_historial(moneda, resultados, estado, ahora):
-    con_stock = [r for r in resultados if r["stock"] and r["ratio"]]
+    con_stock = [r for r in resultados if r["stock"] == "ok" and r["ratio"]]
     if not con_stock:
         return
     mejor = max(con_stock, key=lambda x: x["ratio"])
@@ -486,19 +510,24 @@ def marcar_resumen_enviado(tipo, estado, ahora):
         estado["resumenes"]["ultimo_semanal"] = f"{ahora.isocalendar()[0]}-W{ahora.isocalendar()[1]}"
 
 def formatear_bloque_moneda(moneda, config, resultados, tipo_cambio):
-    con_stock = [r for r in resultados if r["stock"] and r["ratio"]]
+    con_stock = [r for r in resultados if r["stock"] == "ok" and r["ratio"]]
     lineas = [f"{config['bandera']} <b>{moneda}</b>"]
 
     if not con_stock:
         for r in resultados:
-            lineas.append(f"  {r['valor']} {moneda} → ⚫ Sin stock")
+            if r["stock"] == "api_error":
+                lineas.append(f"  {r['valor']} {moneda} → ⚠️ API no disponible")
+            else:
+                lineas.append(f"  {r['valor']} {moneda} → ⚫ Sin stock")
         lineas.append("")
         return lineas
 
     mejor = max(con_stock, key=lambda x: x["ratio"])
 
     for r in resultados:
-        if not r["stock"]:
+        if r["stock"] == "api_error":
+            lineas.append(f"  {r['valor']} {moneda} → ⚠️ API no disponible")
+        elif r["stock"] != "ok":
             lineas.append(f"  {r['valor']} {moneda} → ⚫ Sin stock")
         elif r["valor"] == mejor["valor"]:
             lineas.append(f"  🏆 <b>{r['valor']} {moneda} → {r['precio_eur']:.2f}€ → {r['ratio']:.2f} {moneda}/€</b>")
