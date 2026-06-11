@@ -249,6 +249,7 @@ def get_price(slug, estado):
         )
         if r.status_code != 200:
             print(f"❌ Error de red o API caída (status {r.status_code})")
+            print(f"Respuesta raw: {r.text[:500]}")
             return None, "api_error"
 
         data = r.json()
