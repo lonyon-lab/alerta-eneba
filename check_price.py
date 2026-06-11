@@ -255,6 +255,7 @@ def get_price(slug, estado):
 
         if "errors" in data:
             print(f"❌ Error GraphQL (posible SHA inválido): {data['errors']}")
+            print(f"Detalle error raw: {json.dumps(data['errors'])}")
             if not estado.get("sha_error_alertado"):
                 send_telegram(
                     "⚠️ <b>SHA de Eneba ha cambiado o es inválido</b>\n"
