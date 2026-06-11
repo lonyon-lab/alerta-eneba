@@ -1,18 +1,13 @@
 name: Alerta Eneba TRY
 on:
   schedule:
-    # - cron: '0 1,3,5,7 * * *'   # De 1:00 a 7:00 cada 2 horas
-    # - cron: '0,30 8-23 * * *'    # De 8:00 a 23:00 cada 30 minutos
-    - cron: '*/2 * * * *'          # TEMPORAL: cada 2 minutos para probar
+    - cron: '0 1,3,5,7 * * *'
+    - cron: '0,30 8-23 * * *'
   workflow_dispatch:
 jobs:
   check:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - name: Hora actual UTC
-        run: date -u
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
@@ -23,13 +18,5 @@ jobs:
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          PRICE_THRESHOLD: ${{ secrets.PRICE_THRESHOLD }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python check_price.py
-      - name: Guardar estado
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git pull --rebase
-          git add estado.json
-          git diff --staged --quiet || git commit -m "Actualizar estado"
-          git push
