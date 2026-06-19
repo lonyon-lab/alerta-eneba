@@ -19,7 +19,7 @@
       "sobre_umbral": false,
       "bajo_umbral_bajo": false,
       "sin_datos_alertado": true,
-      "api_error_alertado": false
+      "api_error_alertado": true
     },
     "COP": {
       "ultimo_ratio_alertado": null,
@@ -47,7 +47,7 @@
       "sobre_umbral": false,
       "bajo_umbral_bajo": true,
       "sin_datos_alertado": true,
-      "api_error_alertado": false
+      "api_error_alertado": true
     },
     "HKD": {
       "ultimo_ratio_alertado": null,
