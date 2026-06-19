@@ -920,7 +920,9 @@
       "mejor_precio_eur": 7.59
     }
   ],
-  "resumenes": {},
+  "resumenes": {
+    "ultimo_diario": "2026-06-19"
+  },
   "stock": {
     "xbox-xbox-live-gift-card-25-try-xbox-live-key-turkey": {
       "tiene_stock": true,
